@@ -18,6 +18,10 @@ namespace SmartInfusion_IoT.Data.Entities.Treatment
 
         public double Dosage { get; set; }
 
+        public double InfusionSpeed { get; set; }
+
+        public double PatientWeight { get; set; }
+
         public int DiseaseHistoryId { get; set; }
 
         public bool IsCompleted { get; set; }

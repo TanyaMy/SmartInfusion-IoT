@@ -2,6 +2,7 @@
 using SmartInfusion_IoT.Business.Services;
 using SmartInfusion_IoT.Data.Entities.DiseaseHistory;
 using SmartInfusion_IoT.Data.Entities.Treatment;
+using SmartInfusion_IoT.Infrastructure;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,13 +14,18 @@ namespace SmartInfusion_IoT.Presentation.ViewModels
     {
         private readonly IDiseaseHistoryService _diseaseHistoryService;
         private readonly ITreatmentService _treatmentService;
-        private readonly Uln2003Driver _uln2003Driver;
+        private StepperMotorHelper _stepperMotorHelper;
 
         private ReactiveList<DiseaseHistoryListItemModel> _diseaseHistoryList;
         private DiseaseHistoryListItemModel _selectedDiseaseHistory;
         private ReactiveList<TreatmentListItemModel> _treatmentList;
         private TreatmentListItemModel _selectedTreatment;
         private bool _infusionIsInProgress;
+        private bool _isTreatmentSelected;
+        private double _infusionSpeed;
+        private double _dosage;
+        private double _solutionVolume;
+        private double _patientWeight;
 
         public StartInfusionProcessViewModel(
             IDiseaseHistoryService diseaseHistoryService,
@@ -27,7 +33,6 @@ namespace SmartInfusion_IoT.Presentation.ViewModels
         {
             _diseaseHistoryService = diseaseHistoryService;
             _treatmentService = treatmentService;
-            // _uln2003Driver = new Uln2003Driver(26, 13, 6, 5);
 
             Init();
         }
@@ -60,7 +65,26 @@ namespace SmartInfusion_IoT.Presentation.ViewModels
         public TreatmentListItemModel SelectedTreatment
         {
             get => _selectedTreatment;
-            set => this.RaiseAndSetIfChanged(ref _selectedTreatment, value);
+            set
+            {
+                this.RaiseAndSetIfChanged(ref _selectedTreatment, value);
+                if (_selectedTreatment != null)
+                {
+                    IsTreatmentSelected = true;
+                    InfusionSpeed = _selectedTreatment.InfusionSpeed;
+                    Dosage = _selectedTreatment.Dosage;
+                    SolutionVolume = _selectedTreatment.SolutionVolume;
+                    PatientWeight = _selectedTreatment.PatientWeight;
+                }
+                else
+                {
+                    IsTreatmentSelected = false;
+                    InfusionSpeed = 0;
+                    Dosage = 0;
+                    SolutionVolume = 0;
+                    PatientWeight = 0;
+                }
+            }
         }
 
         public bool InfusionIsInProgress
@@ -69,9 +93,41 @@ namespace SmartInfusion_IoT.Presentation.ViewModels
             set => this.RaiseAndSetIfChanged(ref _infusionIsInProgress, value);
         }
 
+        public bool IsTreatmentSelected
+        {
+            get => _isTreatmentSelected;
+            set => this.RaiseAndSetIfChanged(ref _isTreatmentSelected, value);
+        }
+
+        public double InfusionSpeed
+        {
+            get => _infusionSpeed;
+            set => this.RaiseAndSetIfChanged(ref _infusionSpeed, value);
+        }
+
+        public double Dosage
+        {
+            get => _dosage;
+            set => this.RaiseAndSetIfChanged(ref _dosage, value);
+        }
+
+        public double SolutionVolume
+        {
+            get => _solutionVolume;
+            set => this.RaiseAndSetIfChanged(ref _solutionVolume, value);
+        }
+
+        public double PatientWeight
+        {
+            get => _patientWeight;
+            set => this.RaiseAndSetIfChanged(ref _patientWeight, value);
+        }
+
         public ReactiveCommand StartInfusionCommand { get; set; }
 
         public ReactiveCommand StopInfusionCommand { get; set; }
+
+        public ReactiveCommand RestartInfusionCommand { get; set; }
 
         public ReactiveCommand RefreshDiseaseHistoryList { get; set; }
 
@@ -80,7 +136,8 @@ namespace SmartInfusion_IoT.Presentation.ViewModels
         private async void Init()
         {
             StartInfusionCommand = ReactiveCommand.CreateFromTask(StartInfusionCommandExecuted);
-            StopInfusionCommand = ReactiveCommand.CreateFromTask(StopInfusionCommandExecuted);
+            StopInfusionCommand = ReactiveCommand.Create(StopInfusionCommandExecuted);
+            RestartInfusionCommand = ReactiveCommand.Create(RestartInfusionCommandExecuted);
             RefreshDiseaseHistoryList = ReactiveCommand.CreateFromTask(RefreshHistoriesListCommandExecuted);
             RefreshTreatmentList = ReactiveCommand.CreateFromTask(RefreshTreatmentListCommandExecuted);
 
@@ -94,11 +151,19 @@ namespace SmartInfusion_IoT.Presentation.ViewModels
         {
             if (IsBusy) return;
 
+            if (_stepperMotorHelper == null || SelectedTreatment == null)
+            {
+                _stepperMotorHelper = new StepperMotorHelper(SelectedTreatment);
+            }
+            
+            await _stepperMotorHelper.StartInfusion();
+
             OnIsInProgressChanges(false);
         }
 
-        private async Task StopInfusionProcess()
+        private void StopInfusionProcess()
         {
+            _stepperMotorHelper.StopInfusion();
             OnIsInProgressChanges(false);
         }
 
@@ -111,10 +176,19 @@ namespace SmartInfusion_IoT.Presentation.ViewModels
             }
         }
 
-        private async Task StopInfusionCommandExecuted()
+        private void StopInfusionCommandExecuted()
         {
             InfusionIsInProgress = false;
-            await StopInfusionProcess();
+            StopInfusionProcess();
+        }
+
+        private async Task RestartInfusionCommandExecuted()
+        {
+            if (_stepperMotorHelper == null)
+            {
+                _stepperMotorHelper = new StepperMotorHelper();
+            }
+            await _stepperMotorHelper.ReturnToStart();
         }
 
         private async Task RefreshHistoriesListCommandExecuted()

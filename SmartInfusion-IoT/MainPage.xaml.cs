@@ -33,6 +33,7 @@ namespace SmartInfusion_IoT
 
             d(this.BindCommand(ViewModel, vm => vm.StartInfusionCommand, v => v.StartButton));
             d(this.BindCommand(ViewModel, vm => vm.StopInfusionCommand, v => v.StopButton));
+            d(this.BindCommand(ViewModel, vm => vm.RestartInfusionCommand, v => v.RestartButton));
             d(this.BindCommand(ViewModel, vm => vm.RefreshDiseaseHistoryList, v => v.RefreshHistoriesButton));
             d(this.BindCommand(ViewModel, vm => vm.RefreshTreatmentList, v => v.RefreshTreatmentsButton));
 
@@ -40,11 +41,14 @@ namespace SmartInfusion_IoT
                 isInProgress => isInProgress ? Visibility.Collapsed : Visibility.Visible));
             d(this.OneWayBind(ViewModel, vm => vm.InfusionIsInProgress, v => v.StopButton.Visibility,
             isInProgress => isInProgress ? Visibility.Visible : Visibility.Collapsed));
+            d(this.OneWayBind(ViewModel, vm => vm.IsTreatmentSelected, v => v.TreatmentInfo.Visibility,
+            isSelected => isSelected ? Visibility.Visible : Visibility.Collapsed));
 
             d(this.OneWayBind(ViewModel, vm => vm.DiseaseHistoryList, v => v.DiseaseHistoryComboBox.ItemsSource));
             d(this.Bind(ViewModel, vm => vm.SelectedDiseaseHistory, v => v.DiseaseHistoryComboBox.SelectedItem));
             d(this.OneWayBind(ViewModel, vm => vm.TreatmentList, v => v.TreatmentComboBox.ItemsSource));
             d(this.Bind(ViewModel, vm => vm.SelectedTreatment, v => v.TreatmentComboBox.SelectedItem));
+            
         }
 
         object IViewFor.ViewModel

@@ -2,7 +2,7 @@
 {
     public static class ApiRouting
     {
-        private const string ApiServiceAddress = "http://localhost:5000/";
+        private const string ApiServiceAddress = "https://smartinfusion-api.azurewebsites.net/";
 
         public const string BaseApiUrl = ApiServiceAddress + "api/";
     }

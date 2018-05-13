@@ -119,6 +119,7 @@
     <Compile Include="Data\Entities\Treatment\TreatmentListItemModel.cs" />
     <Compile Include="Data\Entities\Treatment\TreatmentListModel.cs" />
     <Compile Include="Infrastructure\AutofacRegistrator.cs" />
+    <Compile Include="Infrastructure\StepperMotorHelper.cs" />
     <Compile Include="Infrastructure\Uln2003Driver.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
