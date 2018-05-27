@@ -12,8 +12,6 @@ namespace SmartInfusion_IoT.Data.Entities.Treatment
 
         public string Diagnosis { get; set; }
 
-        public double MedicineWeight { get; set; }
-
         public double SolutionVolume { get; set; }
 
         public double Dosage { get; set; }
